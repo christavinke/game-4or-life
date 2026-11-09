@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#151a20">
+<title>Scrap-Claw Goblin — Deep Digging Division</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+:root{--bg:#151a20;--panel:#222a2d;--line:#5e654f;--gold:#e2b969;--cream:#f8edce;--muted:#b9b49b;--green:#79a66a}
+*{box-sizing:border-box}html{background:var(--bg);color:var(--cream);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}body{margin:0;padding:10px;min-height:100dvh;background:radial-gradient(ellipse at 50% -20%,#35443a 0,#151a20 55%);overscroll-behavior-y:contain}
+button,input{font:inherit}button{border:2px solid #c49a5d;background:#805a36;color:#fff2cf;border-radius:5px;padding:10px 9px;min-height:42px;font-weight:900;font-size:11px;cursor:pointer;touch-action:manipulation}button:disabled{opacity:.4;cursor:not--allowed}button:active{transform:translateY(1px);filter:brightness(1.15)}.green{background:#426b43;border-color:#81a66a}.blue{background:#375d78;border-color:#6c9cbb}.purple{background:#63447d;border-color:#a78bc4}.red{background:#753c35;border-color:#bd7562}.ghost{background:#303b3b;border-color:#66715d}
+#app{width:min(100%,1100px);margin:auto;display:flex;flex-direction:column;gap:9px;padding-bottom:env(safe-area-inset-bottom)}
+header,.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.eyebrow{font-size:9px;letter-spacing:.25em;color:var(--gold)}h1{font-size:clamp(21px,4vw,31px);margin:3px 0;line-height:1.1}.sub,.muted{font-size:10px;color:var(--muted)}.panel{background:linear-gradient(145deg,#293235,#20272a);border:2px solid var(--line);border-radius:7px;padding:10px;box-shadow:0 3px 0 #0d1114}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.stat{min-width:0;background:#151d20;border:1px solid #515c4e;border-radius:5px;padding:7px}.stat .value{font-size:clamp(15px,3vw,20px);font-weight:1000;color:var(--gold);overflow-wrap:anywhere}.label{font-size:9px;color:var(--muted)}
+#gameview{position:relative;border:2px solid #a17d4b;border-radius:5px;overflow:hidden;background:#182b27}canvas{display:block;width:100%;height:auto;image-rendering:pixelated;touch-action:pan-y}
+.overlay{position:absolute;top:7px;background:#070b0dcc;padding:5px 7px;border-radius:3px;font-size:9px;max-width:56%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ol{left:7px}.or{right:7px}
+.meter{height:8px;background:#101719;border:1px solid #58604d;border-radius:9px;overflow:hidden}.meter>div{height:100%;background:var(--gold);transition:width .15s}
+.controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.controls button{min-height:48px}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.tab{background:#303b3b;border-color:#59665b;padding:9px 3px;font-size:10px}.tab.active{background:#987342;border-color:#e9c17a}
+.hidden{display:none!important}.shop{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:9px}.shopitem{background:#151d20;border:1px solid #515c4e;border-radius:5px;padding:8px;display:flex;flex-direction:column;gap:5px}.shopitem .emoji{font-size:22px}.shopitem b{font-size:11px}.shopitem button{margin-top:auto}
+.lootrow{display:flex;justify-content:space-between;gap:8px;padding:7px 2px;border-bottom:1px solid #454c43;font-size:11px}.lootrow:last-child{border:0}
+input{width:100%;min-width:0;background:#11191c;color:var(--cream);border:1px solid #69735d;border-radius:4px;padding:10px;font-size:12px}
+#toast{position:fixed;z-index:20;bottom:calc(12px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);max-width:calc(100vw - 24px);padding:11px 14px;background:#302b21;border:2px solid #d3ae70;border-radius:7px;font-size:11px;font-weight:bold;text-align:center;box-shadow:0 6px 25px #0009}
+.footer{text-align:center;color:var(--muted);font-size:9px;line-height:1.7}
+@media(max-width:620px){body{padding:7px}#app{gap:7px}.panel{padding:8px}.controls{grid-template-columns:repeat(2,minmax(0,1fr))}.controls button{min-height:49px;font-size:12px}.shop{grid-template-columns:1fr}.shopitem{display:grid;grid-template-columns:35px 1fr auto;align-items:center}.shopitem .emoji{grid-row:1/3}.shopitem button{grid-column:3;grid-row:1/3}.shopitem .muted{grid-column:2}.tabs{gap:3px}.tab{font-size:9px}.stats{gap:4px}.stat{padding:5px}}
+@media(max-width:370px){.label{font-size:8px}.stats .value{font-size:14px}.sub{font-size:9px}}
+@media(orientation:landscape) and (max-height:560px) and (min-width:650px){body{padding:5px}#app{max-width:1200px;gap:5px}#gameview{max-height:52vh}canvas{max-height:52vh;object-fit:contain}}
+</style>
+</head>
+<body>
+<main id="app">
+<header><div><div class="eyebrow">GOBLIN INDUSTRIES™ · DEEP DIGGING DIVISION</div><h1>SCRAP-CLAW <span style="color:#d4a45e">GOBLIN</span></h1><div class="sub">A suspiciously profitable way to deal with garbage.</div></div><div style="text-align:right"><div style="font-size:29px">👺</div><div class="muted">CEO: YOU</div></div></header>
+<section class="stats">
+<div class="stat"><div class="label">💰 GOLD</div><div id="gold" class="value">0</div></div><div class="stat"><div class="label">💎 CORE SHARDS</div><div id="shards" class="value">0</div></div><div class="stat"><div class="label">📦 HAULS</div><div id="hauls" class="value">0</div></div><div class="stat"><div class="label">⬇️ BEST DEPTH</div><div id="best" class="value">0m</div></div>
+</section>
+<section class="panel row"><div><div class="label">CURRENT BIOME</div><b id="biome" style="color:#e9c77d;font-size:12px">FANTASY TRASH</b></div><div style="text-align:right"><div class="label">CRANE STATUS</div><b id="status" style="font-size:11px;color:#9fcd86">READY</b></div></section>
+<div id="gameview"><canvas id="scene" width="800" height="440" aria-label="Interactive pixel art claw machine"></canvas><div class="overlay ol" id="zone">SURFACE · PLANET 1</div><div class="overlay or" id="depth">DEPTH 0m</div></div>
+<section class="panel">
+<div class="row" style="margin-bottom:7px"><b style="font-size:11px">CRANE CONTROLS</b><span class="muted">← → STEER · SPACE DROP/HAUL</span></div>
+<div class="controls"><button class="blue" id="left">◀ LEFT</button><button class="green" id="drop">▼ DROP / HAUL</button><button class="blue" id="right">RIGHT ▶</button><button id="sell">💰 SELL HAUL</button></div>
+<div class="row" style="margin:9px 0 5px;font-size:10px"><span>Cable extension</span><span id="cabletext">0 / 200m</span></div><div class="meter"><div id="cablebar" style="width:0%"></div></div><div class="muted" style="margin-top:6px">Steer the swinging claw into scrap. Watch your weight limit and avoid hazards!</div>
+</section>
+<section class="stats">
+<div class="stat"><div class="label">⚖️ CARGO</div><div class="value" id="load">0/10</div></div><div class="stat"><div class="label">🪝 CLAW</div><div id="clawname" style="font-size:10px;font-weight:bold;margin-top:5px">Rusty Hook</div></div><div class="stat"><div class="label">⚡ ENGINE</div><div id="engine" style="font-size:10px;font-weight:bold;margin-top:5px">Level 1</div></div><div class="stat"><div class="label">☠️ HAZARDS</div><div id="hazards" style="font-size:10px;font-weight:bold;margin-top:5px">Watch out!</div></div>
+</section>
+<nav class="tabs"><button class="tab active" data-tab="upgrades">⚙ UPGRADES</button><button class="tab" data-tab="inventory">🎒 LOOT</button><button class="tab" data-tab="workers">👷 GOBLINS</button><button class="tab" data-tab="museum">🏛 MUSEUM</button></nav>
+<section class="panel" id="upgrades"><b style="font-size:12px">GOBLIN WORKSHOP</b><div class="shop">
+<div class="shopitem"><div class="emoji">🪢</div><b>Cable Length</b><div id="cablecost" class="muted">100g · Level 1</div><button id="upcable">UPGRADE</button></div>
+<div class="shopitem"><div class="emoji">🦾</div><b>Claw Strength</b><div id="strengthcost" class="muted">100g · Level 1</div><button id="upstrength">UPGRADE</button></div>
+<div class="shopitem"><div class="emoji">⚡</div><b>Engine Speed</b><div id="enginecost" class="muted">120g · Level 1</div><button id="upengine">UPGRADE</button></div></div>
+<div style="border-top:1px solid #58604d;margin-top:11px;padding-top:9px"><div class="row"><b style="font-size:11px">🎰 CLAW-O-MATIC</b><span class="muted">50g / spin</span></div><div class="row" style="margin-top:7px"><span id="gachaicon" style="font-size:25px">🪝</span><div style="flex:1"><b id="gachaname" style="font-size:11px">Rusty Hook</b><div id="gachadesc" class="muted">Your first claw.</div></div><button id="spin" class="purple">SPIN 50G</button></div></div></section>
+<section class="panel hidden" id="inventory"><div class="row"><b style="font-size:12px">CURRENT HAUL</b><span id="itemcount" class="muted">0 items</span></div><div id="lootlist" class="muted" style="margin-top:8px">Nothing in the bucket yet.</div><div class="row" style="margin-top:8px"><b style="font-size:10px">ESTIMATED VALUE</b><b id="value" style="color:#f6d27b">0g</b></div></section>
+<section class="panel hidden" id="workers"><b style="font-size:12px">GOBLIN LABOR UNION</b><p class="muted">Workers earn passive gold. Offline earnings are calculated when you return.</p><div class="row"><span style="font-size:28px">👷</span><div style="flex:1"><b style="font-size:11px">Scrap Sorter</b><div class="muted">2 gold / 5 seconds per goblin</div><div id="workerinfo" class="muted">Workers: 0</div></div><button id="hire" class="green">HIRE 250G</button></div></section>
+<section class="panel hidden" id="museum"><b style="font-size:12px">🏛 GOBLIN MUSEUM OF QUESTIONABLE VALUE</b><p class="muted">Each unique artifact adds a permanent 5% selling bonus.</p><div id="museumlist" class="stats"></div></section>
+<section class="panel"><div class="row"><b style="font-size:11px">🌋 PLANET CORE PROTOCOL</b><span id="corelabel" class="muted">LOCKED</span></div><div class="meter" style="margin:8px 0"><div id="corebar" style="width:0%;background:#e16c42"></div></div><div class="row"><span id="coretext" class="muted" style="flex:1">Reach 1000m to find the core.</span><button id="prestige" class="red" disabled>DETONATE</button></div></section>
+<section class="panel" id="account"><div class="row"><div><b style="font-size:11px">☁️ CLOUD SAVE</b><div id="cloudstatus" class="muted">Local save active · cloud not configured</div></div><button id="accounttoggle" class="ghost">SET UP</button></div><div id="authbox" class="hidden" style="margin-top:10px;display:grid;gap:7px"><div class="muted">Optional: configure Supabase in config.js, then sign in to sync progress across devices.</div><input id="email" type="email" placeholder="Email address" autocomplete="email"><input id="password" type="password" placeholder="Password" autocomplete="current-password"><div class="row"><button id="signup" class="green">CREATE ACCOUNT</button><button id="login" class="blue">SIGN IN</button><button id="logout" class="ghost">SIGN OUT</button></div><button id="sync" class="purple">SYNC CLOUD SAVE NOW</button></div></section>
+<footer class="footer">SCRAP-CLAW GOBLIN v2.0 · ALL TRASH RESERVED™<br>Autosaves locally. Cloud saves are optional and require your own Supabase project.</footer>
+</main><div id="toast" class="hidden" role="status" aria-live="polite"></div>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),canvas=$('scene'),ctx=canvas.getContext('2d');
+const defaults={gold:0,shards:0,hauls:0,maxDepth:0,cableLv:1,strengthLv:1,engineLv:1,workers:0,claw:0,planet:1,museum:[],totalEarned:0,lastSeen:Date.now()};
+let s={...defaults};try{const v=JSON.parse(localStorage.getItem('scg-v2'));if(v)s={...defaults,...v}}catch(e){}
+const claws=[['Rusty Hook','🪝','Your first trusty hook.',0],['Iron Gripper','⚙️','A stronger industrial grip.',2],['Magnet Fang','🧲','A magnetic scrap hunter.',4],['Goblin Crusher','🔩','Heavy-duty grabbing power.',7],['Void Harvester','🌀','A claw from beyond.',11],['Dragonfire Claw','🐉','Legendary and probably illegal.',16]];
+const items=[
+['Bent Tin Can','🥫',8,1,0],['Rusty Gear','⚙️',15,2,0],['Goblin Boot','🥾',22,1,0],['Shiny Copper','🟠',38,2,0],
+['Mech-Suit Arm','🦾',140,5,1],['Neon Circuit','💾',85,2,1],['Quantum Battery','🔋',220,3,1],['Alien Game Console','👾',500,2,1,true],
+['Ancient Bone','🦴',170,3,2],['Magic Crystal','💎',350,2,2],['Cracked Holy Grail','🏆',800,2,2,true],['Radioactive Staff','🪄',650,3,2,true]];
+const biomes=[['FANTASY TRASH','#344d3c','#64734d','#b18a50'],['CYBERPUNK E-WASTE','#172f45','#247c8b','#38d4cf'],['ANCIENT FOSSILIZED MAGIC','#302044','#69508a','#b28ae1']];
+let phase='ready',px=400,py=55,depth=0,runDepth=0,angle=0,angularVelocity=0,anim=0,loot=[],objects=[],hazards=[],last=performance.now(),toastTimer,cloud=null,cloudUser=null,saveTimer=0,workerElapsed=0;
+const fmt=n=>Math.floor(n).toLocaleString(),biomeAt=d=>d<350?0:d<700?1:2,cableMax=()=>100+s.cableLv*100,strength=()=>10+(s.strengthLv-1)*5,capacity=()=>strength()+claws[s.claw][3],load=()=>loot.reduce((a,o)=>a+o.weight,0),haulValue=()=>loot.reduce((a,o)=>a+o.value,0);
+const costs=()=>({cable:Math.floor(100*1.75**(s.cableLv-1)),strength:Math.floor(100*1.7**(s.strengthLv-1)),engine:Math.floor(120*1.8**(s.engineLv-1))});
+function saveLocal(){s.lastSeen=Date.now();try{localStorage.setItem('scg-v2',JSON.stringify(s))}catch(e){}}
+function toast(t){$('toast').textContent=t;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),2300)}
+function spawn(){objects=[];hazards=[];for(let i=0;i<90;i++){let d=50+Math.random()*1150,b=biomeAt(d),pool=items.filter(o=>o[4]<=b);objects.push({item:pool[Math.floor(Math.random()*pool.length)],x:30+Math.random()*740,y:85+d*.48,taken:false})}for(let i=0;i<22;i++){hazards.push({x:40+Math.random()*720,y:100+Math.random()*530,r:10+Math.random()*8,kind:Math.random()<.5?'💥':'🪨',hit:false})}}
+function applyOffline(){const seconds=Math.min(8*3600,Math.max(0,(Date.now()-(s.lastSeen||Date.now()))/1000));if(s.workers&&seconds>=10){const earned=Math.floor(seconds/5)*s.workers*2;s.gold+=earned;toast('YOUR GOBLINS EARNED '+fmt(earned)+' GOLD WHILE YOU WERE AWAY!')}s.lastSeen=Date.now();saveLocal()}
+function update(){
+ const c=costs(),b=biomeAt(depth);
+ $('gold').textContent=fmt(s.gold);$('shards').textContent=fmt(s.shards);$('hauls').textContent=fmt(s.hauls);$('best').textContent=fmt(s.maxDepth)+'m';
+ $('biome').textContent=biomes[b][0];$('zone').textContent=biomes[b][0]+' · PLANET '+s.planet;$('depth').textContent='DEPTH '+Math.floor(depth)+'m';$('status').textContent=phase==='ready'?'READY FOR WORK':phase==='drop'?'DESCENDING':'HAULING';
+ $('cabletext').textContent=Math.floor(depth)+' / '+cableMax()+'m';$('cablebar').style.width=Math.min(100,depth/cableMax()*100)+'%';$('load').textContent=load()+'/'+capacity();$('clawname').textContent=claws[s.claw][0];$('engine').textContent='Level '+s.engineLv;$('hazards').textContent=phase==='drop'?'DODGE!':'Watch out!';
+ $('cablecost').textContent=fmt(c.cable)+'g · Level '+s.cableLv;$('strengthcost').textContent=fmt(c.strength)+'g · Level '+s.strengthLv;$('enginecost').textContent=fmt(c.engine)+'g · Level '+s.engineLv;
+ $('upcable').disabled=s.gold<c.cable;$('upstrength').disabled=s.gold<c.strength;$('upengine').disabled=s.gold<c.engine;$('spin').disabled=s.gold<50;$('hire').disabled=s.gold<250;
+ $('gachaicon').textContent=claws[s.claw][1];$('gachaname').textContent=claws[s.claw][0];$('gachadesc').textContent=claws[s.claw][2];
+ $('itemcount').textContent=loot.length+' items';$('value').textContent=fmt(haulValue())+'g';$('lootlist').innerHTML=loot.length?loot.map(o=>`<div class="lootrow"><span>${o.item[1]} ${o.item[0]}</span><b>${o.item[2]}g</b></div>`).join(''):'Nothing in the bucket yet.';
+ $('workerinfo').textContent='Workers: '+s.workers+' · '+s.workers*2+'g / 5 sec';
+ $('museumlist').innerHTML=items.filter(o=>o[5]).map(o=>`<div class="stat"><div style="font-size:20px">${o[1]}</div><b style="font-size:9px">${o[0]}</b><div class="muted">${s.museum.includes(o[0])?'✨ COLLECTED':'??? UNKNOWN'}</div></div>`).join('');
+ $('corebar').style.width=Math.min(100,s.maxDepth/1000*100)+'%';$('corelabel').textContent=s.maxDepth>=1000?'CORE FOUND':'LOCKED';$('coretext').textContent=s.maxDepth>=1000?'The planet is ready to explode!':'Reach 1000m · '+Math.max(0,1000-s.maxDepth)+'m remaining';$('prestige').disabled=s.maxDepth<1000||phase!=='ready';
+}
+function move(dir){if(phase==='ready'){px=Math.max(45,Math.min(755,px+dir*25));return}if(phase==='drop'){angularVelocity+=dir*.0028}}
+function begin(){if(phase!=='ready')return;phase='drop';depth=0;runDepth=0;py=55;angle=0;angularVelocity=0;loot=[];toast('CLAW DEPLOYED! STEER CAREFULLY!');update()}
+function grab(){const cx=px+Math.sin(angle)*Math.min(145,depth*.25),cy=85+depth*.48;const target=objects.filter(o=>!o.taken&&Math.hypot(o.x-cx,o.y-cy)<28).sort((a,b)=>a.item[2]-b.item[2])[0];if(!target)return;const it=target.item;if(load()+it[3]>capacity()){toast('TOO HEAVY! YOUR CLAW CANNOT HOLD IT!');return}target.taken=true;loot.push({item:it,weight:it[3],value:it[2]});toast(it[1]+' '+it[0]+' · '+it[2]+'G');if(it[5]&&!s.museum.includes(it[0])){s.museum.push(it[0]);toast('MUSEUM DISCOVERY: '+it[0]+'!')}}
+function finish(){phase='ready';py=55;depth=0;s.hauls++;s.maxDepth=Math.max(s.maxDepth,runDepth);saveLocal();update();toast(loot.length?'HAUL COMPLETE! SELL YOUR LOOT!':'EMPTY HAUL. TRY AGAIN!')}
+function sell(){if(!loot.length){toast('NO LOOT TO SELL!');return}const gain=Math.floor(haulValue()*(1+s.shards*.15+s.museum.length*.05));s.gold+=gain;s.totalEarned+=gain;loot=[];saveLocal();update();toast('SOLD FOR '+fmt(gain)+' GOLD!')}
+function upgrade(t){const c=costs()[t];if(s.gold<c)return;s.gold-=c;if(t==='cable')s.cableLv++;if(t==='strength')s.strengthLv++;if(t==='engine')s.engineLv++;saveLocal();update();toast(t.toUpperCase()+' UPGRADED!')}
+function spin(){if(s.gold<50)return;s.gold-=50;const w=[40,27,17,10,5,1];let r=Math.random()*w.reduce((a,b)=>a+b),n=0;for(let i=0;i<w.length;i++){r-=w[i];if(r<=0){n=i;break}}s.claw=n;saveLocal();update();toast('NEW CLAW: '+claws[n][0].toUpperCase()+'!')}
+function prestige(){if(s.maxDepth<1000||phase!=='ready')return;s.shards++;s.planet++;s.gold=0;s.cableLv=1;s.strengthLv=1;s.engineLv=1;s.workers=0;s.claw=0;s.maxDepth=0;s.museum=[];loot=[];spawn();saveLocal();update();toast('PLANET DESTROYED! +1 CORE SHARD!')}
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),w,h)}
+function goblin(x,y,scale=1){ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);rect(-12,-8,24,21,'#6c9b54');rect(-9,-17,18,13,'#8cba67');rect(-16,-13,8,5,'#86b85d');rect(8,-13,8,5,'#86b85d');rect(-5,-12,3,4,'#172019');rect(3,-12,3,4,'#172019');rect(-6,-1,12,3,'#d4a05d');rect(-8,13,6,5,'#554032');rect(2,13,6,5,'#554032');ctx.restore()}
+function draw(){
+ const b=biomeAt(depth),pal=biomes[b];ctx.clearRect(0,0,800,440);rect(0,0,800,440,pal[1]);
+ for(let i=0;i<13;i++){let yy=65+i*39-(depth*.2%39);rect(0,yy,800,3,pal[2]);for(let j=0;j<15;j++){let xx=(j*59+i*37)%800;rect(xx,yy+8,12+(j%3)*8,4,pal[2])}}
+ // surface rig
+ rect(0,0,800,48,'#344035');rect(0,42,800,13,'#a17a47');rect(0,55,800,5,'#d0a45e');rect(100,0,16,25,'#806040');rect(684,0,16,25,'#806040');rect(100,0,600,10,'#b08a52');rect(125,11,550,5,'#554331');
+ for(let i=0;i<5;i++){let gx=145+i*130;ctx.strokeStyle='#a27b48';ctx.lineWidth=7;ctx.beginPath();ctx.arc(gx,25,13,0,6.28);ctx.stroke();rect(gx-2,11,4,28,'#a27b48')}
+ goblin(65,42,.85);goblin(738,42,.85);
+ // biome-specific floating glows and strata
+ for(let i=0;i<12;i++){let gx=(i*83+anim*.25)%800,gy=90+(i*53)%310;rect(gx,gy,3,3,pal[3])}
+ objects.forEach(o=>{if(o.taken)return;const sy=o.y-depth*.48;if(sy<65||sy>430)return;ctx.font='22px serif';ctx.fillText(o.item[1],o.x,sy)});
+ hazards.forEach(h=>{if(h.hit)return;const sy=h.y-depth*.48;if(sy<60||sy>430)return;ctx.font='21px serif';ctx.fillText(h.kind,h.x,sy)});
+ // pendulum crane: angle is actual swing state, with cable length tied to depth
+ const len=35+depth*.48,cx=px+Math.sin(angle)*len,cy=55+Math.cos(angle)*len;
+ ctx.strokeStyle='#d6bd83';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(px,22);ctx.lineTo(cx,cy);ctx.stroke();
+ rect(cx-18,cy-6,36,9,'#786047');rect(cx-14,cy+3,7,18,'#b5a16f');rect(cx+7,cy+3,7,18,'#b5a16f');rect(cx-17,cy+18,9,5,'#c8a15f');rect(cx+8,cy+18,9,5,'#c8a15f');
+ if(loot.length&&phase==='haul'){ctx.font='17px serif';ctx.fillText(loot[0].item[1],cx-7,cy+47)}
+ ctx.fillStyle='#fff1ce';ctx.font='bold 11px monospace';ctx.fillText('GOBLIN INDUSTRIES // DEPTH SYSTEM',20,420);ctx.fillStyle=pal[3];ctx.fillText('PLANET '+s.planet+' // CORE',665,420);
+}
+function loop(now){const dt=Math.min((now-last)/16.67,2);last=now;anim+=dt;
+ if(phase==='drop'){
+  // Pendulum physics: gravity pulls the cable back toward vertical; player steering adds torque.
+  angularVelocity+=(-0.0019*Math.sin(angle))*dt;angularVelocity*=Math.pow(.994,dt);angle+=angularVelocity*dt;angle=Math.max(-.72,Math.min(.72,angle));
+  depth+=(1.55+s.engineLv*.16)*dt;runDepth=depth;s.maxDepth=Math.max(s.maxDepth,runDepth);
+  const cx=px+Math.sin(angle)*(35+depth*.48),cy=55+Math.cos(angle)*(35+depth*.48);
+  for(const h of hazards){if(h.hit)continue;const hy=h.y-depth*.48;if(hy>50&&hy<420&&Math.hypot(h.x-cx,hy-cy)<h.r+9){h.hit=true;if(loot.length){const lost=loot.pop();toast('💥 BOOM! LOST '+lost.item[0]+'!')}else toast('CLANG! HAZARD HIT!')}}
+  if(Math.random()<.045)grab();
+  if(depth>=cableMax()||load()>=capacity()){phase='haul';toast('CABLE LIMIT! REELING IN!')}
+ }else if(phase==='haul'){
+  depth=Math.max(0,depth-(2.5+s.engineLv*.34)*dt);angle*=Math.pow(.93,dt);if(depth<=0)finish();
+ }
+ workerElapsed+=dt*16.67;if(s.workers&&workerElapsed>=5000){const n=Math.floor(workerElapsed/5000);s.gold+=n*s.workers*2;workerElapsed%=5000;saveLocal()}
+ saveTimer+=dt;if(saveTimer>180){saveTimer=0;saveLocal()}
+ draw();update();requestAnimationFrame(loop)}
+$('left').addEventListener('pointerdown',e=>{e.preventDefault();move(-1)});$('right').addEventListener('pointerdown',e=>{e.preventDefault();move(1)});
+$('drop').onclick=()=>{if(phase==='ready')begin();else if(phase==='drop'){phase='haul';toast('REELING IN!');update()}};$('sell').onclick=sell;
+$('upcable').onclick=()=>upgrade('cable');$('upstrength').onclick=()=>upgrade('strength');$('upengine').onclick=()=>upgrade('engine');$('spin').onclick=spin;$('hire').onclick=()=>{if(s.gold<250)return;s.gold-=250;s.workers++;saveLocal();update();toast('A GOBLIN JOINED THE UNION!')};$('prestige').onclick=prestige;
+document.querySelectorAll('.tab').forEach(btn=>btn.onclick=()=>{document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b===btn));['upgrades','inventory','workers','museum'].forEach(id=>$(id).classList.toggle('hidden',id!==btn.dataset.tab))});
+window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Space'].includes(e.code)&&!['BUTTON','INPUT'].includes(document.activeElement?.tagName)){e.preventDefault();if(e.code==='ArrowLeft')move(-1);if(e.code==='ArrowRight')move(1);if(e.code==='Space')$('drop').click()}});
+/* Optional Supabase cloud saves. Browser receives only the public anon/publishable key.
+   RLS policies in supabase-schema.sql restrict each row to its authenticated owner. */
+const cfg=window.SCRAP_CLAW_CONFIG||{};const configured=!!(cfg.url&&cfg.anonKey&&window.supabase);
+if(configured){cloud=window.supabase.createClient(cfg.url,cfg.anonKey);$('cloudstatus').textContent='Supabase configured · sign in to enable cross-device saves'}else{$('cloudstatus').textContent='Local save active · add Supabase keys to config.js for cloud sync'}
+$('accounttoggle').onclick=()=>$('authbox').classList.toggle('hidden');
+async function auth(action){if(!cloud){toast('Add your Supabase URL and public key to config.js first.');return}const email=$('email').value.trim(),password=$('password').value;if(!email||!password){toast('Enter email and password.');return}let result=action==='signup'?await cloud.auth.signUp({email,password}):await cloud.auth.signInWithPassword({email,password});if(result.error){toast(result.error.message);return}cloudUser=result.data.user;$('cloudstatus').textContent='Signed in as '+email;toast(action==='signup'?'Account created. Check email if confirmation is enabled.':'Signed in!');}
+$('signup').onclick=()=>auth('signup');$('login').onclick=()=>auth('login');
+$('logout').onclick=async()=>{if(!cloud)return;await cloud.auth.signOut();cloudUser=null;$('cloudstatus').textContent='Signed out · local save active';toast('Signed out.')};
+async function syncCloud(){if(!cloud){toast('Configure Supabase first.');return}const {data}=await cloud.auth.getUser();if(!data.user){toast('Sign in first.');return}cloudUser=data.user;const {data:row,error}=await cloud.from('player_saves').select('save_data').eq('user_id',cloudUser.id).maybeSingle();if(error){toast(error.message);return}if(row?.save_data){const cloudSave=row.save_data;const useCloud=confirm('A cloud save exists. OK = load cloud save. Cancel = upload this device save.');if(useCloud){s={...defaults,...cloudSave};saveLocal();update();toast('Cloud save loaded!');return}}
+const {error:upErr}=await cloud.from('player_saves').upsert({user_id:cloudUser.id,save_data:s,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(upErr)toast(upErr.message);else toast('Cloud save uploaded successfully!')}
+$('sync').onclick=syncCloud;
+applyOffline();spawn();update();requestAnimationFrame(loop);
+window.addEventListener('beforeunload',saveLocal);
+})();
+</script>
+</body></html>
