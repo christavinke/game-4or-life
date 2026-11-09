@@ -92,7 +92,42 @@ function update(){
 }
 function move(dir){if(phase==='ready'){px=Math.max(45,Math.min(755,px+dir*25));return}if(phase==='drop'){angularVelocity+=dir*.0028}}
 function begin(){if(phase!=='ready')return;phase='drop';depth=0;runDepth=0;py=55;angle=0;angularVelocity=0;loot=[];toast('CLAW DEPLOYED! STEER CAREFULLY!');update()}
-function grab(){const cx=px+Math.sin(angle)*Math.min(145,depth*.25),cy=85+depth*.48;const target=objects.filter(o=>!o.taken&&Math.hypot(o.x-cx,o.y-cy)<28).sort((a,b)=>a.item[2]-b.item[2])[0];if(!target)return;const it=target.item;if(load()+it[3]>capacity()){toast('TOO HEAVY! YOUR CLAW CANNOT HOLD IT!');return}target.taken=true;loot.push({item:it,weight:it[3],value:it[2]});toast(it[1]+' '+it[0]+' · '+it[2]+'G');if(it[5]&&!s.museum.includes(it[0])){s.museum.push(it[0]);toast('MUSEUM DISCOVERY: '+it[0]+'!')}}
+function grab() {
+    const len = 35 + depth * 0.48;
+
+    // Keep the grabbing position identical to the visible hook position
+    const cx = px + Math.sin(angle) * len;
+    const cy = 55 + Math.cos(angle) * len;
+
+    // Larger detection radius makes collecting scrap easier
+    const target = objects
+        .filter(o => !o.taken && Math.hypot(o.x - cx, o.y - depth * 0.48 - cy) < 45)
+        .sort((a, b) => a.item[2] - b.item[2])[0];
+
+    if (!target) return;
+
+    const it = target.item;
+
+    if (load() + it[3] > capacity()) {
+        toast('TOO HEAVY! YOUR CLAW CANNOT HOLD IT!');
+        return;
+    }
+
+    target.taken = true;
+
+    loot.push({
+        item: it,
+        weight: it[3],
+        value: it[2]
+    });
+
+    toast(it[1] + ' ' + it[0] + ' · ' + it[2] + 'G');
+
+    if (it[5] && !s.museum.includes(it[0])) {
+        s.museum.push(it[0]);
+        toast('MUSEUM DISCOVERY: ' + it[0] + '!');
+    }
+}
 function finish(){phase='ready';py=55;depth=0;s.hauls++;s.maxDepth=Math.max(s.maxDepth,runDepth);saveLocal();update();toast(loot.length?'HAUL COMPLETE! SELL YOUR LOOT!':'EMPTY HAUL. TRY AGAIN!')}
 function sell(){if(!loot.length){toast('NO LOOT TO SELL!');return}const gain=Math.floor(haulValue()*(1+s.shards*.15+s.museum.length*.05));s.gold+=gain;s.totalEarned+=gain;loot=[];saveLocal();update();toast('SOLD FOR '+fmt(gain)+' GOLD!')}
 function upgrade(t){const c=costs()[t];if(s.gold<c)return;s.gold-=c;if(t==='cable')s.cableLv++;if(t==='strength')s.strengthLv++;if(t==='engine')s.engineLv++;saveLocal();update();toast(t.toUpperCase()+' UPGRADED!')}
